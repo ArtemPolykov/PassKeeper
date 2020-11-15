@@ -1,0 +1,1 @@
+dotnet add .\PassKeePerApi\PassKeePerApi.csproj package Microsoft.AspNetCore.Authentication.JwtBearer
