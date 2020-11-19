@@ -28,11 +28,21 @@ namespace PassKeeperAuthorizationService
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var passwordOpt = Configuration.GetSection("PasswordOptions");
+
             services.AddControllers();
 
             services.AddDbContext<passkeeperContext>();
-            services.AddIdentityCore<Users>()
-                .AddEntityFrameworkStores<passkeeperContext>();
+            
+            services.AddIdentityCore<Users>(o => 
+            {
+                o.Password.RequiredLength = passwordOpt.GetValue<int>("RequiredLength");
+                o.Password.RequireNonAlphanumeric = passwordOpt.GetValue<bool>("RequireNonAlphanumeric");
+                o.Password.RequireLowercase = passwordOpt.GetValue<bool>("RequireLowercase");
+                o.Password.RequireUppercase = passwordOpt.GetValue<bool>("RequireUppercase");
+                o.Password.RequireDigit = passwordOpt.GetValue<bool>("RequireDigit");
+            })
+            .AddEntityFrameworkStores<passkeeperContext>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -43,6 +53,7 @@ namespace PassKeeperAuthorizationService
                 app.UseDeveloperExceptionPage();
             }
 
+            
             app.UseHttpsRedirection();
 
             app.UseRouting();

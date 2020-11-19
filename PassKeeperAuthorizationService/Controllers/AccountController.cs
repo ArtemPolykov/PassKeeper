@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -21,12 +22,67 @@ namespace PassKeeperAuthorizationService.Controllers
         [HttpPost]
         public async Task<IActionResult> SignUp(SignUpModel model)
         {
-            throw new NotImplementedException();
+            if(!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = await _userManager.FindByNameAsync(model.UserName);
+            if(user != null)
+            {
+                ModelState.AddModelError("UserName", "UserName is used");
+                return BadRequest(ModelState);
+            }
+
+            user = await _userManager.FindByEmailAsync(model.Email);
+            if(user != null)
+            {
+                ModelState.AddModelError("Email", "Email is used");
+                return BadRequest(ModelState);
+            }
+
+            user = new Users()
+            {
+                Email = model.Email,
+                UserName = model.UserName,
+            };
+
+            var result = await _userManager.CreateAsync(user, model.Password);
+            if(!result.Succeeded)
+            {
+                foreach(var e in result.Errors)
+                    ModelState.AddModelError(e.Code, e.Description);
+
+                return BadRequest(ModelState);
+            }
+
+
+
+            return Json(new { Token = "Token" });
         }
+
         [HttpPost]
         public async Task<IActionResult> SignIn(SignInModel model)
         {
-            return Json(_userManager);
+            if(!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = await _userManager.FindByNameAsync(model.Login);
+
+            if(user == null)
+                user = await _userManager.FindByEmailAsync(model.Login);
+
+            if(user == null)
+            {
+                ModelState.AddModelError("Login", "Invalid login");
+                return BadRequest(ModelState);
+            }
+
+            if(!await _userManager.CheckPasswordAsync(user, model.Password))
+            {
+                ModelState.AddModelError("Login", "Invalid Password");
+                return BadRequest(ModelState);
+            }
+
+            return Json(new { Token = "Token" });
         }
 
         [HttpPost]
