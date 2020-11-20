@@ -13,6 +13,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using PassKeePerLib.Data;
 using PassKeePerLib.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace PassKeeperAuthorizationService
 {
@@ -29,10 +30,12 @@ namespace PassKeeperAuthorizationService
         public void ConfigureServices(IServiceCollection services)
         {
             var passwordOpt = Configuration.GetSection("PasswordOptions");
+            var connectionString = Configuration.GetSection("ConnectionStrings")["PassKeeperDatabase"];
 
             services.AddControllers();
 
-            services.AddDbContext<passkeeperContext>();
+            services.AddDbContext<passkeeperContext>(opt => 
+                opt.UseMySql(connectionString));
             
             services.AddIdentityCore<Users>(o => 
             {

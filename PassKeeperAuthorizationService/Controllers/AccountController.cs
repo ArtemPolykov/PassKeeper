@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +7,7 @@ using PassKeePerLib.Models;
 
 namespace PassKeeperAuthorizationService.Controllers
 {
-    [Controller]
+	[Controller]
     [Route("[controller]/[action]")]
     public class AccountController : Controller
     {

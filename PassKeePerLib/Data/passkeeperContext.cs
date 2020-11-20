@@ -18,7 +18,6 @@ namespace PassKeePerLib.Data
         {
         }
 
-
         public virtual DbSet<Accounts> Accounts { get; set; }
         public virtual DbSet<BrowsingHistory> BrowsingHistory { get; set; }
         public virtual DbSet<EnterpriseWallets> EnterpriseWallets { get; set; }
@@ -31,14 +30,14 @@ namespace PassKeePerLib.Data
         public virtual DbSet<Wallets> Wallets { get; set; }
         public virtual DbSet<Workers> Workers { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            if (!optionsBuilder.IsConfigured)
-            {
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-                optionsBuilder.UseMySql("server=localhost;database=passkeeper;user=root;password=112358", x => x.ServerVersion("8.0.20-mysql"));
-            }
-        }
+//         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+//         {
+//             if (!optionsBuilder.IsConfigured)
+//             {
+// #warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
+//                 optionsBuilder.UseMySql("server=localhost;database=passkeeper;user=root;password=112358", x => x.ServerVersion("8.0.20-mysql"));
+//             }
+//         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
