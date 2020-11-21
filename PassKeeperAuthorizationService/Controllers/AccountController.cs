@@ -19,10 +19,17 @@ namespace PassKeeperAuthorizationService.Controllers
 
         private async Task<JwtSecurityToken> GetToken(Users user)
         {
-            var tokenClaim = (await _userManager.GetClaimsAsync(user)).Where(c => c.Type == "JwtToken");
-            if(tokenClaim != )
+            
 
-            throw new NotImplementedException();
+            var token = new JwtSecurityToken(
+                issuer: "PassKeperAccount",
+                audience: "PassKeeperClient"
+            );
+
+            return token;
+            // var tokenClaim = (await _userManager.GetClaimsAsync(user)).Where(c => c.Type == "JwtToken");
+            // if(tokenClaim != )
+            // throw new NotImplementedException();
         }
 
         public AccountController(UserManager<Users> userManager)
