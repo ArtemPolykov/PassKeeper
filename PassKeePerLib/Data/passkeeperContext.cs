@@ -1,11 +1,13 @@
 ﻿using System;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using PassKeePerLib.Models;
 
 namespace PassKeePerLib.Data
 {
-    public partial class passkeeperContext : DbContext
+    public partial class passkeeperContext : IdentityDbContext<Users, IdentityRole<int>, int>
     {
         public passkeeperContext()
         {
@@ -24,18 +26,18 @@ namespace PassKeePerLib.Data
         public virtual DbSet<Enterprises> Enterprises { get; set; }
         public virtual DbSet<PersonalWallets> PersonalWallets { get; set; }
         public virtual DbSet<PersonalWalletsApprovedUsers> PersonalWalletsApprovedUsers { get; set; }
-        public virtual DbSet<Users> Users { get; set; }
+        //public virtual DbSet<Users> Users { get; set; }
         public virtual DbSet<Wallets> Wallets { get; set; }
         public virtual DbSet<Workers> Workers { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            if (!optionsBuilder.IsConfigured)
-            {
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-                optionsBuilder.UseMySql("server=localhost;database=passkeeper;user=root;password=112358", x => x.ServerVersion("8.0.20-mysql"));
-            }
-        }
+//         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+//         {
+//             if (!optionsBuilder.IsConfigured)
+//             {
+// #warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
+//                 optionsBuilder.UseMySql("server=localhost;database=passkeeper;user=root;password=112358", x => x.ServerVersion("8.0.20-mysql"));
+//             }
+//         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -280,46 +282,46 @@ namespace PassKeePerLib.Data
                     .HasConstraintName("personal_wallets_approved_users_ibfk_1");
             });
 
-            modelBuilder.Entity<Users>(entity =>
-            {
-                entity.ToTable("users");
+            // modelBuilder.Entity<Users>(entity =>
+            // {
+            //     entity.ToTable("users");
 
-                entity.HasIndex(e => e.Email)
-                    .HasName("email")
-                    .IsUnique();
+            //     entity.HasIndex(e => e.Email)
+            //         .HasName("email")
+            //         .IsUnique();
 
-                entity.HasIndex(e => e.Login)
-                    .HasName("login")
-                    .IsUnique();
+            //     entity.HasIndex(e => e.Login)
+            //         .HasName("login")
+            //         .IsUnique();
 
-                entity.Property(e => e.Id).HasColumnName("id");
+            //     entity.Property(e => e.Id).HasColumnName("id");
 
-                entity.Property(e => e.Email)
-                    .HasColumnName("email")
-                    .HasColumnType("varchar(70)")
-                    .HasCharSet("utf8mb4")
-                    .HasCollation("utf8mb4_0900_ai_ci");
+            //     entity.Property(e => e.Email)
+            //         .HasColumnName("email")
+            //         .HasColumnType("varchar(70)")
+            //         .HasCharSet("utf8mb4")
+            //         .HasCollation("utf8mb4_0900_ai_ci");
 
-                entity.Property(e => e.Login)
-                    .IsRequired()
-                    .HasColumnName("login")
-                    .HasColumnType("varchar(50)")
-                    .HasCharSet("utf8mb4")
-                    .HasCollation("utf8mb4_0900_ai_ci");
+            //     entity.Property(e => e.Login)
+            //         .IsRequired()
+            //         .HasColumnName("login")
+            //         .HasColumnType("varchar(50)")
+            //         .HasCharSet("utf8mb4")
+            //         .HasCollation("utf8mb4_0900_ai_ci");
 
-                entity.Property(e => e.UserName)
-                    .IsRequired()
-                    .HasColumnName("user_name")
-                    .HasColumnType("varchar(50)")
-                    .HasCharSet("utf8mb4")
-                    .HasCollation("utf8mb4_0900_ai_ci");
+            //     entity.Property(e => e.UserName)
+            //         .IsRequired()
+            //         .HasColumnName("user_name")
+            //         .HasColumnType("varchar(50)")
+            //         .HasCharSet("utf8mb4")
+            //         .HasCollation("utf8mb4_0900_ai_ci");
 
-                entity.Property(e => e.UserlastName)
-                    .HasColumnName("userlast_name")
-                    .HasColumnType("varchar(50)")
-                    .HasCharSet("utf8mb4")
-                    .HasCollation("utf8mb4_0900_ai_ci");
-            });
+            //     entity.Property(e => e.UserlastName)
+            //         .HasColumnName("userlast_name")
+            //         .HasColumnType("varchar(50)")
+            //         .HasCharSet("utf8mb4")
+            //         .HasCollation("utf8mb4_0900_ai_ci");
+            // });
 
             modelBuilder.Entity<Wallets>(entity =>
             {
@@ -361,6 +363,7 @@ namespace PassKeePerLib.Data
             });
 
             OnModelCreatingPartial(modelBuilder);
+            base.OnModelCreating(modelBuilder);
         }
 
         partial void OnModelCreatingPartial(ModelBuilder modelBuilder);

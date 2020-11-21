@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PassKeePerLib", "PassKeePerLib\PassKeePerLib.csproj", "{B6E8E215-D564-47CA-BCA3-B320F2357653}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PassKeeperAuthorizationService", "PassKeeperAuthorizationService\PassKeeperAuthorizationService.csproj", "{5F04107F-F722-4326-86EF-032A9E8B94AA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,17 @@ Global
 		{B6E8E215-D564-47CA-BCA3-B320F2357653}.Release|x64.Build.0 = Release|Any CPU
 		{B6E8E215-D564-47CA-BCA3-B320F2357653}.Release|x86.ActiveCfg = Release|Any CPU
 		{B6E8E215-D564-47CA-BCA3-B320F2357653}.Release|x86.Build.0 = Release|Any CPU
+		{5F04107F-F722-4326-86EF-032A9E8B94AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F04107F-F722-4326-86EF-032A9E8B94AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F04107F-F722-4326-86EF-032A9E8B94AA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5F04107F-F722-4326-86EF-032A9E8B94AA}.Debug|x64.Build.0 = Debug|Any CPU
+		{5F04107F-F722-4326-86EF-032A9E8B94AA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5F04107F-F722-4326-86EF-032A9E8B94AA}.Debug|x86.Build.0 = Debug|Any CPU
+		{5F04107F-F722-4326-86EF-032A9E8B94AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F04107F-F722-4326-86EF-032A9E8B94AA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F04107F-F722-4326-86EF-032A9E8B94AA}.Release|x64.ActiveCfg = Release|Any CPU
+		{5F04107F-F722-4326-86EF-032A9E8B94AA}.Release|x64.Build.0 = Release|Any CPU
+		{5F04107F-F722-4326-86EF-032A9E8B94AA}.Release|x86.ActiveCfg = Release|Any CPU
+		{5F04107F-F722-4326-86EF-032A9E8B94AA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
