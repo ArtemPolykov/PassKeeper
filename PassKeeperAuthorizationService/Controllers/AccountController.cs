@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using PassKeeperAuthorizationService.ViewModels;
 using PassKeePerLib.Models;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Linq;
 
 namespace PassKeeperAuthorizationService.Controllers
 {
@@ -11,11 +14,21 @@ namespace PassKeeperAuthorizationService.Controllers
     [Route("[controller]/[action]")]
     public class AccountController : Controller
     {
+        private readonly JwtSecurityTokenHandler _tokenHandler;
         private readonly UserManager<Users> _userManager;
+
+        private async Task<JwtSecurityToken> GetToken(Users user)
+        {
+            var tokenClaim = (await _userManager.GetClaimsAsync(user)).Where(c => c.Type == "JwtToken");
+            if(tokenClaim != )
+
+            throw new NotImplementedException();
+        }
 
         public AccountController(UserManager<Users> userManager)
         {
             _userManager = userManager;
+            _tokenHandler = new JwtSecurityTokenHandler();
         }
 
         [HttpPost]
@@ -53,8 +66,6 @@ namespace PassKeeperAuthorizationService.Controllers
                 return BadRequest(ModelState);
             }
 
-
-
             return Json(new { Token = "Token" });
         }
 
@@ -64,24 +75,29 @@ namespace PassKeeperAuthorizationService.Controllers
             if(!ModelState.IsValid)
                 return BadRequest(ModelState);
 
+            // Попытаться получить пользователя по UserName или Email
             var user = await _userManager.FindByNameAsync(model.Login);
-
             if(user == null)
                 user = await _userManager.FindByEmailAsync(model.Login);
 
+            // Если пользователь не найден
             if(user == null)
             {
                 ModelState.AddModelError("Login", "Invalid login");
                 return BadRequest(ModelState);
             }
 
+            // Проверить пароль
             if(!await _userManager.CheckPasswordAsync(user, model.Password))
             {
                 ModelState.AddModelError("Login", "Invalid Password");
                 return BadRequest(ModelState);
             }
 
-            return Json(new { Token = "Token" });
+            // Получить токен для пользователя
+            var token = await GetToken(user);
+
+            return Json(new { Token = _tokenHandler.WriteToken(token) });
         }
 
         [HttpPost]
