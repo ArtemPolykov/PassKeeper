@@ -5,37 +5,67 @@ using Microsoft.AspNetCore.Mvc;
 using PassKeeperAuthorizationService.ViewModels;
 using PassKeePerLib.Models;
 using System.IdentityModel.Tokens.Jwt;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Linq;
+using PassKeeperAuthorizationService.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using System.Collections.Generic;
 
 namespace PassKeeperAuthorizationService.Controllers
 {
-	[Controller]
+    [Controller]
     [Route("[controller]/[action]")]
     public class AccountController : Controller
     {
         private readonly JwtSecurityTokenHandler _tokenHandler;
         private readonly UserManager<Users> _userManager;
+        private readonly TokenParametres _tokenParametres;
 
-        private async Task<JwtSecurityToken> GetToken(Users user)
+        private JwtSecurityToken CreateNewToken(Users user)
         {
-            
+            var now = DateTime.UtcNow;
+            var exp = now.AddMinutes(_tokenParametres.LifeTimeMinutes);
+            var signingCredentials = new SigningCredentials(_tokenParametres.SymmetricSecurityKey, SecurityAlgorithms.HmacSha256);
+
+            var claims = new List<Claim>()
+            {
+                new Claim("UserName", user.UserName)
+            };
 
             var token = new JwtSecurityToken(
-                issuer: "PassKeperAccount",
-                audience: "PassKeeperClient"
+                issuer: _tokenParametres.Issuser,
+                audience: _tokenParametres.Audience,
+                claims: claims,
+                notBefore: now,
+                expires: exp,
+                signingCredentials: signingCredentials
             );
 
             return token;
-            // var tokenClaim = (await _userManager.GetClaimsAsync(user)).Where(c => c.Type == "JwtToken");
-            // if(tokenClaim != )
-            // throw new NotImplementedException();
         }
 
-        public AccountController(UserManager<Users> userManager)
+        private async Task<JwtSecurityToken> GetTokenWithUpdate(Users user)
+        {
+            var token = CreateNewToken(user);
+            var claims = (await _userManager.GetClaimsAsync(user)).Where(c => c.Type == "Token");
+
+            await _userManager.RemoveClaimsAsync(user, claims);
+            await _userManager.AddClaimAsync(user, new Claim("Token", _tokenHandler.WriteToken(token)));
+
+            return token;
+        }
+
+        public AccountController(UserManager<Users> userManager, TokenParametres tokenParametres)
         {
             _userManager = userManager;
+            _tokenParametres = tokenParametres;
             _tokenHandler = new JwtSecurityTokenHandler();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CheckToken(string token)
+        {
+            
         }
 
         [HttpPost]
@@ -73,7 +103,8 @@ namespace PassKeeperAuthorizationService.Controllers
                 return BadRequest(ModelState);
             }
 
-            return Json(new { Token = "Token" });
+            // Получить токен для пользователя
+            return Json(new { Token = _tokenHandler.WriteToken(await GetTokenWithUpdate(user)) });
         }
 
         [HttpPost]
@@ -100,17 +131,41 @@ namespace PassKeeperAuthorizationService.Controllers
                 ModelState.AddModelError("Login", "Invalid Password");
                 return BadRequest(ModelState);
             }
-
+            
             // Получить токен для пользователя
-            var token = await GetToken(user);
-
-            return Json(new { Token = _tokenHandler.WriteToken(token) });
+            return Json(new { Token = _tokenHandler.WriteToken(await GetTokenWithUpdate(user)) });
         }
 
         [HttpPost]
-        public async Task SignOut()
+        public async Task<IActionResult> SignOut(string token)
         {
-            throw new NotImplementedException();
+            var t = new JwtSecurityToken(token);
+            var userName = t?.Claims?.FirstOrDefault(c => c.Type == "UserName")?.Value;
+            // Если не удалось получить токен или его структура неверна
+            if(userName == null)
+            {
+                ModelState.AddModelError("Token", "Invalid token");
+                return BadRequest(ModelState);
+            }
+
+            var user = await _userManager.FindByNameAsync(userName);
+            // Если пользователь не найден
+            if(user == null)
+            {
+                ModelState.AddModelError("Token", "Invalid login");
+                return BadRequest(ModelState);
+            }
+
+            var claims = (await _userManager.GetClaimsAsync(user)).Where(c => c.Type == "Token");
+            var result = await _userManager.RemoveClaimsAsync(user, claims);
+
+            if(!result.Succeeded)
+            {
+                ModelState.AddModelError("Operation", "OperationError");
+                return BadRequest(ModelState);
+            }
+
+            return StatusCode(200);
         }
     }
 }

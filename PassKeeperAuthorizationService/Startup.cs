@@ -14,6 +14,9 @@ using Microsoft.Extensions.Logging;
 using PassKeePerLib.Data;
 using PassKeePerLib.Models;
 using Microsoft.EntityFrameworkCore;
+using PassKeeperAuthorizationService.Configuration;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 namespace PassKeeperAuthorizationService
 {
@@ -29,21 +32,24 @@ namespace PassKeeperAuthorizationService
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            var passwordOpt = Configuration.GetSection("PasswordOptions");
-            var connectionString = Configuration.GetSection("ConnectionStrings")["PassKeeperDatabase"];
+            var connectionString = Configuration.GetConnectionString("PassKeeperDatabase");
+            var passwordOpt = Configuration.GetSection("PasswordOptions").Get<PasswordSettings>();
+            var tokenParametres = Configuration.GetSection("TokenParametres").Get<TokenParametres>();
 
             services.AddControllers();
+
+            services.AddSingleton<TokenParametres>(tokenParametres);
 
             services.AddDbContext<passkeeperContext>(opt => 
                 opt.UseMySql(connectionString));
             
             services.AddIdentityCore<Users>(o => 
             {
-                o.Password.RequiredLength = passwordOpt.GetValue<int>("RequiredLength");
-                o.Password.RequireNonAlphanumeric = passwordOpt.GetValue<bool>("RequireNonAlphanumeric");
-                o.Password.RequireLowercase = passwordOpt.GetValue<bool>("RequireLowercase");
-                o.Password.RequireUppercase = passwordOpt.GetValue<bool>("RequireUppercase");
-                o.Password.RequireDigit = passwordOpt.GetValue<bool>("RequireDigit");
+                o.Password.RequiredLength = passwordOpt.RequiredLength;
+                o.Password.RequireNonAlphanumeric = passwordOpt.RequireNonAlphanumeric;
+                o.Password.RequireLowercase = passwordOpt.RequireLowercase;
+                o.Password.RequireUppercase = passwordOpt.RequireUppercase;
+                o.Password.RequireDigit = passwordOpt.RequireDigit;
             })
             .AddEntityFrameworkStores<passkeeperContext>();
         }
@@ -61,6 +67,7 @@ namespace PassKeeperAuthorizationService
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
