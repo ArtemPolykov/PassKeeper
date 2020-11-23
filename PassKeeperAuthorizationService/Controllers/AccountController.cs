@@ -78,7 +78,8 @@ namespace PassKeeperAuthorizationService.Controllers
             }
             
             var userName = t?.Claims?.FirstOrDefault(c => c.Type == "UserName")?.Value;
-            if(userName == null)
+            
+            if(string.IsNullOrEmpty(userName))
             {
                 ModelState.AddModelError("Token", "Invalid TokenString");
                 return BadRequest(ModelState);
@@ -100,7 +101,7 @@ namespace PassKeeperAuthorizationService.Controllers
             var claim = (await _userManager.GetClaimsAsync(user)).FirstOrDefault(c => c.Type == "Token");
             if(claim == null)
             {
-                ModelState.AddModelError("Token", "Invalid UserName");
+                ModelState.AddModelError("SignIn", "Error");
                 return BadRequest(ModelState);
             }
 
@@ -110,7 +111,7 @@ namespace PassKeeperAuthorizationService.Controllers
                 return BadRequest(ModelState);
             }
 
-            return Json(new { Token = _tokenHandler.WriteToken(await GetTokenWithUpdate(user)) });
+            return Json(new { UserName = userName, Token = _tokenHandler.WriteToken(await GetTokenWithUpdate(user)) });
         }
 
         [HttpPost]
