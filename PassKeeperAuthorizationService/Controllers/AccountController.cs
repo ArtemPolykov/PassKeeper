@@ -65,7 +65,52 @@ namespace PassKeeperAuthorizationService.Controllers
         [HttpPost]
         public async Task<IActionResult> CheckToken(string token)
         {
+            JwtSecurityToken t = null;
+
+            try
+            {
+                t = new JwtSecurityToken(token);
+            }
+            catch
+            {
+                ModelState.AddModelError("Token", "Invalid TokenString");
+                return BadRequest(ModelState);
+            }
             
+            var userName = t?.Claims?.FirstOrDefault(c => c.Type == "UserName")?.Value;
+            if(userName == null)
+            {
+                ModelState.AddModelError("Token", "Invalid TokenString");
+                return BadRequest(ModelState);
+            }
+
+            if(t.ValidTo < DateTime.UtcNow)
+            {
+                ModelState.AddModelError("Token", "Invalid LifeTime");
+                return BadRequest(ModelState);
+            }
+
+            var user = await _userManager.FindByNameAsync(userName);
+            if(user == null)
+            {
+                ModelState.AddModelError("Token", "Invalid UserName");
+                return BadRequest(ModelState);
+            }
+
+            var claim = (await _userManager.GetClaimsAsync(user)).FirstOrDefault(c => c.Type == "Token");
+            if(claim == null)
+            {
+                ModelState.AddModelError("Token", "Invalid UserName");
+                return BadRequest(ModelState);
+            }
+
+            if(token != claim.Value)
+            {
+                ModelState.AddModelError("Token", "Invalid Token");
+                return BadRequest(ModelState);
+            }
+
+            return Json(new { Token = _tokenHandler.WriteToken(await GetTokenWithUpdate(user)) });
         }
 
         [HttpPost]
