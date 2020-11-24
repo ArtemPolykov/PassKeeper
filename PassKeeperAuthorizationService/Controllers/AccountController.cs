@@ -22,18 +22,17 @@ namespace PassKeeperAuthorizationService.Controllers
         private readonly UserManager<Users> _userManager;
         private readonly TokenParametres _tokenParametres;
 
+        // Создать новый токен для пользователя
         private JwtSecurityToken CreateNewToken(Users user)
         {
             var now = DateTime.UtcNow;
             var exp = now.AddMinutes(_tokenParametres.LifeTimeMinutes);
             var signingCredentials = new SigningCredentials(_tokenParametres.SymmetricSecurityKey, SecurityAlgorithms.HmacSha256);
+            
+            // Необходимо чтобы из токена можно было извлекать UserName
+            var claims = new List<Claim>() { new Claim("UserName", user.UserName) };
 
-            var claims = new List<Claim>()
-            {
-                new Claim("UserName", user.UserName)
-            };
-
-            var token = new JwtSecurityToken(
+            return new JwtSecurityToken(
                 issuer: _tokenParametres.Issuser,
                 audience: _tokenParametres.Audience,
                 claims: claims,
@@ -41,21 +40,21 @@ namespace PassKeeperAuthorizationService.Controllers
                 expires: exp,
                 signingCredentials: signingCredentials
             );
-
-            return token;
         }
 
+        // Возвращает новый токен одновременно записав его в базу
         private async Task<JwtSecurityToken> GetTokenWithUpdate(Users user)
         {
-            //var token = CreateNewToken(user);
-            // var claims = (await _userManager.GetClaimsAsync(user)).Where(c => c.Type == "Token");
-            // await _userManager.RemoveClaimsAsync(user, claims);
-            // await _userManager.AddClaimAsync(user, new Claim("Token", _tokenHandler.WriteToken(token)));
+            // Создать новый токен и получить старые из базы
+            var token = CreateNewToken(user);
+            var claims = (await _userManager.GetClaimsAsync(user)).Where(c => c.Type == "Token");
+            
+            // Удалить все старые токены юзера
+            await _userManager.RemoveClaimsAsync(user, claims);
+            // Записать новый токен
+            await _userManager.AddClaimAsync(user, new Claim("Token", _tokenHandler.WriteToken(token)));
 
-            var tokenBytes = await _userManager.CreateSecurityTokenAsync(user);
-            var token = Encoding.ASCII.GetString(tokenBytes);
-
-            return CreateNewToken(user);
+            return token;
         }
 
         public AccountController(UserManager<Users> userManager, TokenParametres tokenParametres)
@@ -68,32 +67,34 @@ namespace PassKeeperAuthorizationService.Controllers
         [HttpPost]
         public async Task<IActionResult> CheckToken(string token)
         {
+            // Попытка создать токен из строки
             JwtSecurityToken t = null;
-
             try
             {
                 t = new JwtSecurityToken(token);
             }
-            catch
+            catch   // Если не удалось создать токен, вернуть клиенту ошибку
             {
                 ModelState.AddModelError("Token", "Invalid TokenString");
                 return BadRequest(ModelState);
             }
             
+            // Достать из токена UserName
             var userName = t?.Claims?.FirstOrDefault(c => c.Type == "UserName")?.Value;
-            
             if(string.IsNullOrEmpty(userName))
             {
                 ModelState.AddModelError("Token", "Invalid TokenString");
                 return BadRequest(ModelState);
             }
 
+            // Если токен просрочен, вернуть ошибку
             if(t.ValidTo < DateTime.UtcNow)
             {
                 ModelState.AddModelError("Token", "Invalid LifeTime");
                 return BadRequest(ModelState);
             }
 
+            // Найти юзера в базе
             var user = await _userManager.FindByNameAsync(userName);
             if(user == null)
             {
@@ -101,6 +102,7 @@ namespace PassKeeperAuthorizationService.Controllers
                 return BadRequest(ModelState);
             }
 
+            // Получить из базы токен для сравненич
             var claim = (await _userManager.GetClaimsAsync(user)).FirstOrDefault(c => c.Type == "Token");
             if(claim == null)
             {
