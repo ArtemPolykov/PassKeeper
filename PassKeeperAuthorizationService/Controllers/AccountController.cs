@@ -10,6 +10,7 @@ using PassKeeperAuthorizationService.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Collections.Generic;
+using System.Text;
 
 namespace PassKeeperAuthorizationService.Controllers
 {
@@ -46,13 +47,15 @@ namespace PassKeeperAuthorizationService.Controllers
 
         private async Task<JwtSecurityToken> GetTokenWithUpdate(Users user)
         {
-            var token = CreateNewToken(user);
-            var claims = (await _userManager.GetClaimsAsync(user)).Where(c => c.Type == "Token");
+            //var token = CreateNewToken(user);
+            // var claims = (await _userManager.GetClaimsAsync(user)).Where(c => c.Type == "Token");
+            // await _userManager.RemoveClaimsAsync(user, claims);
+            // await _userManager.AddClaimAsync(user, new Claim("Token", _tokenHandler.WriteToken(token)));
 
-            await _userManager.RemoveClaimsAsync(user, claims);
-            await _userManager.AddClaimAsync(user, new Claim("Token", _tokenHandler.WriteToken(token)));
+            var tokenBytes = await _userManager.CreateSecurityTokenAsync(user);
+            var token = Encoding.ASCII.GetString(tokenBytes);
 
-            return token;
+            return CreateNewToken(user);
         }
 
         public AccountController(UserManager<Users> userManager, TokenParametres tokenParametres)
