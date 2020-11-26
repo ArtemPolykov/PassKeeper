@@ -10,6 +10,8 @@ using PassKeeperAuthorizationService.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Text;
 
 namespace PassKeeperAuthorizationService.Controllers
 {
@@ -17,49 +19,51 @@ namespace PassKeeperAuthorizationService.Controllers
     [Route("[controller]/[action]")]
     public class AccountController : Controller
     {
-        private readonly JwtSecurityTokenHandler _tokenHandler;
+        //private readonly JwtSecurityTokenHandler _tokenHandler;
         private readonly UserManager<Users> _userManager;
-        private readonly TokenParametres _tokenParametres;
+        //private readonly TokenParametres _tokenParametres;
 
-        private JwtSecurityToken CreateNewToken(Users user)
+        // private JwtSecurityToken CreateNewToken(Users user)
+        // {
+        //     var now = DateTime.UtcNow;
+        //     var exp = now.AddMinutes(_tokenParametres.LifeTimeMinutes);
+        //     var signingCredentials = new SigningCredentials(_tokenParametres.SymmetricSecurityKey, SecurityAlgorithms.HmacSha256);
+
+        //     var claims = new List<Claim>()
+        //     {
+        //         new Claim("UserName", user.UserName)
+        //     };
+
+        //     var token = new JwtSecurityToken(
+        //         issuer: _tokenParametres.Issuser,
+        //         audience: _tokenParametres.Audience,
+        //         claims: claims,
+        //         notBefore: now,
+        //         expires: exp,
+        //         signingCredentials: signingCredentials
+        //     );
+
+        //     return token;
+        // }
+
+        private async Task<string> GetTokenWithUpdate(Users user)
         {
-            var now = DateTime.UtcNow;
-            var exp = now.AddMinutes(_tokenParametres.LifeTimeMinutes);
-            var signingCredentials = new SigningCredentials(_tokenParametres.SymmetricSecurityKey, SecurityAlgorithms.HmacSha256);
+            // var token = CreateNewToken(user);
+            // var claims = (await _userManager.GetClaimsAsync(user)).Where(c => c.Type == "Token");
+            // await _userManager.RemoveClaimsAsync(user, claims);
+            // await _userManager.AddClaimAsync(user, new Claim("Token", _tokenHandler.WriteToken(token)));
 
-            var claims = new List<Claim>()
-            {
-                new Claim("UserName", user.UserName)
-            };
-
-            var token = new JwtSecurityToken(
-                issuer: _tokenParametres.Issuser,
-                audience: _tokenParametres.Audience,
-                claims: claims,
-                notBefore: now,
-                expires: exp,
-                signingCredentials: signingCredentials
-            );
+            var token = await _userManager.GenerateUserTokenAsync(user, TokenOptions.DefaultProvider, "");
+            await _userManager.SetAuthenticationTokenAsync(user, "", "", token);
 
             return token;
         }
 
-        private async Task<JwtSecurityToken> GetTokenWithUpdate(Users user)
-        {
-            var token = CreateNewToken(user);
-            var claims = (await _userManager.GetClaimsAsync(user)).Where(c => c.Type == "Token");
-
-            await _userManager.RemoveClaimsAsync(user, claims);
-            await _userManager.AddClaimAsync(user, new Claim("Token", _tokenHandler.WriteToken(token)));
-
-            return token;
-        }
-
-        public AccountController(UserManager<Users> userManager, TokenParametres tokenParametres)
+        public AccountController(UserManager<Users> userManager/*, TokenParametres tokenParametres*/)
         {
             _userManager = userManager;
-            _tokenParametres = tokenParametres;
-            _tokenHandler = new JwtSecurityTokenHandler();
+            //_tokenParametres = tokenParametres;
+            //_tokenHandler = new JwtSecurityTokenHandler();
         }
 
         [HttpPost]
@@ -111,7 +115,7 @@ namespace PassKeeperAuthorizationService.Controllers
                 return BadRequest(ModelState);
             }
 
-            return Json(new { UserName = userName, Token = _tokenHandler.WriteToken(await GetTokenWithUpdate(user)) });
+            return Json(new { UserName = userName, Token = await GetTokenWithUpdate(user) });
         }
 
         [HttpPost]
@@ -150,7 +154,7 @@ namespace PassKeeperAuthorizationService.Controllers
             }
 
             // Получить токен для пользователя
-            return Json(new { Token = _tokenHandler.WriteToken(await GetTokenWithUpdate(user)) });
+            return Json(new { /*Token = _tokenHandler.WriteToken(await GetTokenWithUpdate(user))*/ });
         }
 
         [HttpPost]
@@ -179,7 +183,7 @@ namespace PassKeeperAuthorizationService.Controllers
             }
             
             // Получить токен для пользователя
-            return Json(new { Token = _tokenHandler.WriteToken(await GetTokenWithUpdate(user)) });
+            return Json(new { Token = await GetTokenWithUpdate(user) });
         }
 
         [HttpPost]
