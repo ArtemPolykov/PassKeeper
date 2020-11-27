@@ -7,6 +7,7 @@ using PassKeePerLib.Data;
 using PassKeePerLib.Models;
 using Microsoft.EntityFrameworkCore;
 using PassKeeperAuthorizationService.Configuration;
+using PassKeeperAuthorizationService.Services;
 
 namespace PassKeeperAuthorizationService
 {
@@ -41,7 +42,8 @@ namespace PassKeeperAuthorizationService
                 o.Password.RequireUppercase = passwordOpt.RequireUppercase;
                 o.Password.RequireDigit = passwordOpt.RequireDigit;
             })
-            .AddEntityFrameworkStores<passkeeperContext>();
+            .AddEntityFrameworkStores<passkeeperContext>()
+            .AddTokenProvider<JwtTokenProvider>(tokenParametres.TokenProvider);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
